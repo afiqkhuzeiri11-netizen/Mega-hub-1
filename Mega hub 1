@@ -1,53 +1,35 @@
--- [[ CYBER ENGINE V5.2 - ADVANCED ANTI-KICK & STABLE HUB ]] --
+-- [[ CYBER ENGINE V6 - FISH RIDERS FINAL ULTIMATE HUB ]] --
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
+local TeleportService = game:GetService("TeleportService")
+local CoreGui = game:GetService("CoreGui")
 local Player = Players.LocalPlayer
 
--- [ 1. AGGRESSIVE ANTI-KICK & ANTI-BAN BYPASS ] --
+-- [ 1. ADVANCED ANTI-KICK & ERROR-FREE BYPASS ] --
 pcall(function()
     local mt = getrawmetatable(game)
     setreadonly(mt, false)
     local oldNamecall = mt.__namecall
-    
     mt.__namecall = newcclosure(function(self, ...)
         local method = getnamecallmethod()
-        local args = {...}
-        
-        -- Blokir semua upaya pemanggilan fungsi kick atau server disconnect
-        if method and (method:lower() == "kick" or method:lower() == "loaddatabase" or method:lower() == "save") then
-            if self == Player then
-                warn("[Cyber Hub] Upaya Kick dari server berhasil diblokir!")
-                return nil
-            end
+        if method and method:lower() == "kick" and self == Player then
+            return nil
         end
-        
         return oldNamecall(self, ...)
     end)
     setreadonly(mt, true)
 end)
 
--- Lindungi fungsi Player:Kick asli
-pcall(function()
-    local OldKick; OldKick = hookmetamethod(Player, "__namecall", function(self, ...)
-        local method = getnamecallmethod()
-        if self == Player and method and method:lower() == "kick" then
-            warn("[Cyber Hub] Player:Kick dicegat dan dinonaktifkan.")
-            return
-        end
-        return OldKick(self, ...)
-    end)
-end)
-
 local PlayerGui = Player:WaitForChild("PlayerGui", 5)
 if not PlayerGui then return end
 
--- Hapus GUI lama dengan aman
+-- Hapus GUI lama
 pcall(function()
-    if PlayerGui:FindFirstChild("CyberHubV5") then
-        PlayerGui.CyberHubV5:Destroy()
+    if PlayerGui:FindFirstChild("CyberHubV6") then
+        PlayerGui.CyberHubV6:Destroy()
     end
 end)
 
@@ -58,14 +40,32 @@ local isAutoCoin = false
 local isGodMode = false
 local isInfJump = false
 local isNoclip = false
+local isESPActive = false
+local isInfZoom = false
+local isAutoReconnect = true
 
 local walkSpeedVal = 16
 local swimSpeedVal = 16
 local fishSpeedVal = 50
 
--- [ 2. GUI UTAMA ] --
+-- [ 2. AUTO RECONNECT SYSTEM ] --
+task.spawn(function()
+    pcall(function()
+        CoreGui.ChildAdded:Connect(function(child)
+            if isAutoReconnect and child.Name == "RobloxPromptGui" then
+                task.wait(1)
+                local prompt = child:FindFirstChild("promptOverlay", true)
+                if prompt then
+                    TeleportService:Teleport(game.PlaceId, Player)
+                end
+            end
+        end)
+    end)
+end)
+
+-- [ 3. GUI UTAMA ] --
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "CyberHubV5"
+ScreenGui.Name = "CyberHubV6"
 ScreenGui.Parent = PlayerGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.ResetOnSpawn = false
@@ -73,8 +73,8 @@ ScreenGui.ResetOnSpawn = false
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(12, 13, 20)
-MainFrame.Position = UDim2.new(0.5, -170, 0.15, 0)
-MainFrame.Size = UDim2.new(0, 340, 0, 460)
+MainFrame.Position = UDim2.new(0.5, -170, 0.12, 0)
+MainFrame.Size = UDim2.new(0, 340, 0, 480)
 MainFrame.Active = true
 MainFrame.Draggable = true
 
@@ -96,7 +96,7 @@ HeaderTitle.Parent = Header
 HeaderTitle.Size = UDim2.new(1, -45, 1, 0)
 HeaderTitle.Position = UDim2.new(0, 15, 0, 0)
 HeaderTitle.BackgroundTransparency = 1
-HeaderTitle.Text = "⚡ FISH RIDERS // V5.2 ANTI-KICK"
+HeaderTitle.Text = "⚡ FISH RIDERS // V6 FINAL HUB"
 HeaderTitle.TextColor3 = Color3.fromRGB(0, 255, 170)
 HeaderTitle.TextSize = 12
 HeaderTitle.Font = Enum.Font.GothamBold
@@ -123,7 +123,7 @@ Container.Parent = MainFrame
 Container.Position = UDim2.new(0, 10, 0, 55)
 Container.Size = UDim2.new(1, -20, 1, -65)
 Container.BackgroundTransparency = 1
-Container.CanvasSize = UDim2.new(0, 0, 0, 560)
+Container.CanvasSize = UDim2.new(0, 0, 0, 640)
 Container.ScrollBarThickness = 3
 
 local function addSection(titleText, yPos)
@@ -185,11 +185,224 @@ local function addToggle(text, yPos, callback)
     end)
 end
 
--- [ 3. MENU ITEMS ] --
+-- [ 4. MENU ITEMS ] --
 addSection("✦ AUTO FARMING & EVENT", 5)
 addToggle("🎃 Auto Collect Pumpkin (Labu)", 30, function(s) isAutoPumpkin = s end)
 addToggle("🥚 Auto Collect Eggs (Telur)", 75, function(s) isAutoEgg = s end)
 addToggle("💰 Auto Collect Coins & Gems", 120, function(s) isAutoCoin = s end)
 
-addSection("✦ PLAYER & SPEED ENHANCEMENTS", 165)
-addToggle("🛡️ God Mode (Kebal Darah)", 190, function(s) isGodMode
+addSection("✦ VISUAL & WORLD ESP", 165)
+addToggle("👁️ ESP Pumpkin & Eggs (Tembus Pandang)", 190, function(s) isESPActive = s end)
+addToggle("🔭 Infinite Zoom Out (Kamera Luas)", 235, function(s) isInfZoom = s end)
+
+addSection("✦ PLAYER & SPEED ENHANCEMENTS", 280)
+addToggle("🛡️ God Mode (Kebal Darah)", 305, function(s) isGodMode = s end)
+addToggle("🚀 Infinite Jump (Terbang)", 350, function(s) isInfJump = s end)
+addToggle("👻 Noclip (Tembus Dinding)", 395, function(s) isNoclip = s end)
+
+-- Tombol Darurat Safe Zone
+local SafeBtn = Instance.new("TextButton")
+SafeBtn.Parent = Container
+SafeBtn.Position = UDim2.new(0, 0, 0, 440)
+SafeBtn.Size = UDim2.new(1, 0, 0, 36)
+SafeBtn.BackgroundColor3 = Color3.fromRGB(180, 100, 20)
+SafeBtn.Text = "🏠 Teleport to Safe Zone / Spawn"
+SafeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SafeBtn.TextSize = 11
+SafeBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", SafeBtn).CornerRadius = UDim.new(0, 8)
+
+SafeBtn.MouseButton1Click:Connect(function()
+    pcall(function()
+        local char = Player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = CFrame.new(0, 15, 0)
+        end
+    end)
+end)
+
+local function addSpeedInput(placeholder, yPos, callback)
+    local Box = Instance.new("TextBox")
+    Box.Parent = Container
+    Box.Position = UDim2.new(0, 0, 0, yPos)
+    Box.Size = UDim2.new(0.65, -5, 0, 36)
+    Box.BackgroundColor3 = Color3.fromRGB(22, 24, 38)
+    Box.PlaceholderText = placeholder
+    Box.Text = ""
+    Box.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Box.TextSize = 11
+    Box.Font = Enum.Font.Gotham
+    Instance.new("UICorner", Box).CornerRadius = UDim.new(0, 8)
+
+    local Btn = Instance.new("TextButton")
+    Btn.Parent = Container
+    Btn.Position = UDim2.new(0.65, 5, 0, yPos)
+    Btn.Size = UDim2.new(0.35, -5, 0, 36)
+    Btn.BackgroundColor3 = Color3.fromRGB(0, 255, 170)
+    Btn.Text = "Set"
+    Btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+    Btn.TextSize = 11
+    Btn.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 8)
+
+    Btn.MouseButton1Click:Connect(function()
+        pcall(function()
+            local val = tonumber(Box.Text)
+            if val then callback(val) end
+        end)
+    end)
+end
+
+addSection("✦ WALK, SWIM & FISH SPEED", 485)
+
+local l1 = Instance.new("TextLabel", Container)
+l1.Position = UDim2.new(0, 0, 0, 510)
+l1.Size = UDim2.new(1, 0, 0, 15)
+l1.BackgroundTransparency = 1
+l1.Text = "Walk Speed:"
+l1.TextColor3 = Color3.fromRGB(180, 190, 210)
+l1.TextSize = 10
+l1.Font = Enum.Font.Gotham
+addSpeedInput("Cth: 32", 530, function(v) walkSpeedVal = v end)
+
+local l2 = Instance.new("TextLabel", Container)
+l2.Position = UDim2.new(0, 0, 0, 570)
+l2.Size = UDim2.new(1, 0, 0, 15)
+l2.BackgroundTransparency = 1
+l2.Text = "Swim Speed:"
+l2.TextColor3 = Color3.fromRGB(180, 190, 210)
+l2.TextSize, l2.Font = 10, Enum.Font.Gotham
+addSpeedInput("Cth: 50", 590, function(v) swimSpeedVal = v end)
+
+local l3 = Instance.new("TextLabel", Container)
+l3.Position = UDim2.new(0, 0, 0, 630)
+l3.Size = UDim2.new(1, 0, 0, 15)
+l3.BackgroundTransparency = 1
+l3.Text = "Fish Ride Speed:"
+l3.TextColor3 = Color3.fromRGB(180, 190, 210)
+l3.TextSize, l3.Font = 10, Enum.Font.Gotham
+addSpeedInput("Cth: 100", 650, function(v) fishSpeedVal = v end)
+
+-- [ 5. LOGIKA EKSEKUSI UTAMA ] --
+task.spawn(function()
+    while task.wait(0.4) do
+        pcall(function()
+            if not isAutoPumpkin and not isAutoEgg and not isAutoCoin then return end
+            local char = Player.Character
+            if not char then return end
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+            
+            for _, obj in pairs(Workspace:GetDescendants()) do
+                pcall(function()
+                    if obj and (obj:IsA("BasePart") or obj:IsA("Model")) then
+                        local name = obj.Name:lower()
+                        local targetPart = obj:IsA("Model") and (obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")) or obj
+                        
+                        if targetPart and targetPart:IsA("BasePart") then
+                            local match = false
+                            if isAutoPumpkin and (name:find("pumpkin") or name:find("labu") or name:find("event")) then
+                                match = true
+                            elseif isAutoEgg and (name:find("egg") or name:find("telur")) then
+                                match = true
+                            elseif isAutoCoin and (name:find("coin") or name:find("gem") or name:find("cash") or name:find("gold")) then
+                                match = true
+                            end
+                            
+                            if match then
+                                hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+                                task.wait(0.15)
+                            end
+                        end
+                    end
+                end)
+            end
+        end)
+    end
+end)
+
+-- ESP Loop
+task.spawn(function()
+    while task.wait(1) do
+        pcall(function()
+            for _, obj in pairs(Workspace:GetDescendants()) do
+                pcall(function()
+                    if isESPActive and (obj:IsA("BasePart") or obj:IsA("Model")) then
+                        local name = obj.Name:lower()
+                        if name:find("pumpkin") or name:find("labu") or name:find("egg") or name:find("telur") then
+                            local target = obj:IsA("Model") and (obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")) or obj
+                            if target and not target:FindFirstChild("CyberHighlight") then
+                                local hl = Instance.new("Highlight")
+                                hl.Name = "CyberHighlight"
+                                hl.Parent = target
+                                hl.FillColor = Color3.fromRGB(0, 255, 170)
+                                hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+                            end
+                        end
+                    elseif not isESPActive then
+                        if obj.Name == "CyberHighlight" then
+                            obj:Destroy()
+                        end
+                    end
+                end)
+            end
+        end)
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    pcall(function()
+        local char = Player.Character
+        if not char then return end
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        
+        if hum then
+            if hum:GetState() == Enum.HumanoidStateType.Swimming then
+                hum.WalkSpeed = swimSpeedVal
+            else
+                hum.WalkSpeed = walkSpeedVal
+            end
+
+            if isGodMode then hum.Health = hum.MaxHealth end
+        end
+
+        if isInfZoom then
+            Player.CameraMaxZoomDistance = 999999
+        else
+            Player.CameraMaxZoomDistance = 400
+        end
+
+        for _, obj in pairs(Workspace:GetDescendants()) do
+            pcall(function()
+                if obj and (obj:IsA("VehicleSeat") or obj:IsA("Seat")) then
+                    if hum and obj.Occupant == hum then
+                        obj.AssemblyLinearVelocity = obj.CFrame.LookVector * fishSpeedVal
+                    end
+                end
+            end)
+        end
+
+        if isNoclip then
+            for _, part in pairs(char:GetDescendants()) do
+                pcall(function()
+                    if part and part:IsA("BasePart") then 
+                        part.CanCollide = false 
+                    end
+                end)
+            end
+        end
+    end)
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    pcall(function()
+        if isInfJump and Player.Character then
+            local hum = Player.Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end
+    end)
+end)
+
+print("⚡ Cyber Hub V6 Final Loaded Successfully!")
