@@ -1,0 +1,70 @@
+-- [[ CYBER HUB - FRESH CLEAN VERSION ]] --
+
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local Player = Players.LocalPlayer
+
+-- Hapus GUI lama agar tidak numpuk
+pcall(function()
+    if CoreGui:FindFirstChild("CyberHub") then
+        CoreGui.CyberHub:Destroy()
+    end
+end)
+
+-- Status Fitur
+local isAutoPumpkinActive = false
+
+-- Buat GUI Utama
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "CyberHub"
+ScreenGui.Parent = CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 25)
+MainFrame.Position = UDim2.new(0.5, -160, 0.3, 0)
+MainFrame.Size = UDim2.new(0, 320, 0, 220)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 12)
+local Stroke = Instance.new("UIStroke")
+Stroke.Parent = MainFrame
+Stroke.Color = Color3.fromRGB(255, 140, 0)
+Stroke.Thickness = 2
+
+-- Judul Hub
+Title = Instance.new("TextLabel")
+Title.Parent = MainFrame
+Title.Size = UDim2.new(1, 0, 0, 45)
+Title.BackgroundTransparency = 1
+Title.Text = "🎃 FISH RIDERS // FRESH HUB 🎃"
+Title.TextColor3 = Color3.fromRGB(255, 140, 0)
+Title.TextSize = 13
+Title.Font = Enum.Font.GothamBold
+
+-- Tombol Auto Pumpkin
+local PumpkinBtn = Instance.new("TextButton")
+PumpkinBtn.Parent = MainFrame
+PumpkinBtn.Position = UDim2.new(0, 20, 0, 60)
+PumpkinBtn.Size = UDim2.new(1, -40, 0, 45)
+PumpkinBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 40)
+PumpkinBtn.Text = "🎃 Auto Collect Pumpkin [ OFF ]"
+PumpkinBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
+PumpkinBtn.TextSize = 12
+PumpkinBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", PumpkinBtn).CornerRadius = UDim.new(0, 8)
+
+PumpkinBtn.MouseButton1Click:Connect(function()
+    isAutoPumpkinActive = not isAutoPumpkinActive
+    if isAutoPumpkinActive then
+        PumpkinBtn.Text = "🎃 Auto Collect Pumpkin [ ON ]"
+        PumpkinBtn.TextColor3 = Color3.fromRGB(0, 255, 170)
+        PumpkinBtn.BackgroundColor3 = Color3.fromRGB(15, 35, 30)
+    else
+        PumpkinBtn.Text = "🎃 Auto Collect Pumpkin [ OFF ]"
+        PumpkinBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
+        PumpkinBtn.BackgroundColor3 = Color3.fromRGB(25,
