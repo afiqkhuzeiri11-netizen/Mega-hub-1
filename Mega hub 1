@@ -1,19 +1,20 @@
--- [[ CYBER HUB V2 - FISH RIDERS ULTIMATE ENGINE ]] --
+-- [[ CYBER ENGINE V3 - FISH RIDERS FULL FEATURES ]] --
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
 
--- [ 1. ADVANCED BYPASS & METATABLE HOOKING ] --
+-- [ 1. SAFE ANTI-KICK BYPASS ] --
 pcall(function()
     local mt = getrawmetatable(game)
     setreadonly(mt, false)
     local old = mt.__namecall
     mt.__namecall = newcclosure(function(self, ...)
         local method = getnamecallmethod()
-        if method:lower() == "kick" then
+        if tostring(method):lower() == "kick" then
             return nil
         end
         return old(self, ...)
@@ -21,16 +22,231 @@ pcall(function()
     setreadonly(mt, true)
 end)
 
--- [ 2. GUI CONTAINER SETUP (GUARANTEED VISIBILITY) ] --
-local TargetParent = game:GetService("CoreGui")
+-- Hapus GUI lama agar tidak numpuk
 pcall(function()
-    if gethui then
-        TargetParent = gethui()
-    elseif Player:FindFirstChild("PlayerGui") then
-        TargetParent = Player.PlayerGui
+    if PlayerGui:FindFirstChild("CyberHubV3") then
+        PlayerGui.CyberHubV3:Destroy()
     end
 end)
 
-pcall(function()
-    if TargetParent:FindFirstChild("CyberHubV2") then
-        
+-- Status Fitur
+local isAutoPumpkin = false
+local isAutoEgg = false
+local isAutoCoin = false
+local isGodMode = false
+local isInfJump = false
+local isNoclip = false
+local walkSpeedVal = 16
+
+-- [ 2. MEMBUAT GUI UTAMA (DIJAMIN MUNCUL) ] --
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "CyberHubV3"
+ScreenGui.Parent = PlayerGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(12, 13, 20)
+MainFrame.Position = UDim2.new(0.5, -170, 0.2, 0)
+MainFrame.Size = UDim2.new(0, 340, 0, 420)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 14)
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Parent = MainFrame
+UIStroke.Color = Color3.fromRGB(255, 140, 0)
+UIStroke.Thickness = 1.8
+
+-- Header Top Bar
+local Header = Instance.new("Frame")
+Header.Parent = MainFrame
+Header.Size = UDim2.new(1, 0, 0, 45)
+Header.BackgroundColor3 = Color3.fromRGB(20, 22, 32)
+Instance.new("UICorner", Header).CornerRadius = UDim.new(0, 14)
+
+local HeaderTitle = Instance.new("TextLabel")
+HeaderTitle.Parent = Header
+HeaderTitle.Size = UDim2.new(1, -45, 1, 0)
+HeaderTitle.Position = UDim2.new(0, 15, 0, 0)
+HeaderTitle.BackgroundTransparency = 1
+HeaderTitle.Text = "🎃 FISH RIDERS // ULTIMATE HUB"
+HeaderTitle.TextColor3 = Color3.fromRGB(255, 140, 0)
+HeaderTitle.TextSize = 12
+HeaderTitle.Font = Enum.Font.GothamBold
+HeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Parent = Header
+CloseBtn.Position = UDim2.new(1, -35, 0, 10)
+CloseBtn.Size = UDim2.new(0, 25, 0, 25)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 40, 60)
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 11
+CloseBtn.Font = Enum.Font.GothamBold
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- Container Scroll
+local Container = Instance.new("ScrollingFrame")
+Container.Parent = MainFrame
+Container.Position = UDim2.new(0, 10, 0, 55)
+Container.Size = UDim2.new(1, -20, 1, -65)
+Container.BackgroundTransparency = 1
+Container.CanvasSize = UDim2.new(0, 0, 0, 460)
+Container.ScrollBarThickness = 3
+
+local function addSection(titleText, yPos)
+    local lbl = Instance.new("TextLabel")
+    lbl.Parent = Container
+    lbl.Position = UDim2.new(0, 5, 0, yPos)
+    lbl.Size = UDim2.new(1, -10, 0, 20)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = titleText
+    lbl.TextColor3 = Color3.fromRGB(0, 200, 255)
+    lbl.TextSize = 11
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    return lbl
+end
+
+local function addToggle(text, yPos, callback)
+    local Btn = Instance.new("TextButton")
+    Btn.Parent = Container
+    Btn.Position = UDim2.new(0, 0, 0, yPos)
+    Btn.Size = UDim2.new(1, 0, 0, 36)
+    Btn.BackgroundColor3 = Color3.fromRGB(22, 24, 38)
+    Btn.Text = "  " .. text
+    Btn.TextColor3 = Color3.fromRGB(180, 190, 210)
+    Btn.TextSize = 11
+    Btn.Font = Enum.Font.GothamBold
+    Btn.TextXAlignment = Enum.TextXAlignment.Left
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 8)
+    local Stroke = Instance.new("UIStroke")
+    Stroke.Parent = Btn
+    Stroke.Color = Color3.fromRGB(40, 45, 70)
+
+    local Badge = Instance.new("TextLabel")
+    Badge.Parent = Btn
+    Badge.Position = UDim2.new(1, -60, 0, 7)
+    Badge.Size = UDim2.new(0, 50, 0, 22)
+    Badge.BackgroundColor3 = Color3.fromRGB(40, 20, 30)
+    Badge.Text = "OFF"
+    Badge.TextColor3 = Color3.fromRGB(255, 70, 90)
+    Badge.TextSize = 10
+    Badge.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", Badge).CornerRadius = UDim.new(0, 5)
+
+    local active = false
+    Btn.MouseButton1Click:Connect(function()
+        active = not active
+        if active then
+            Badge.Text = "ON"
+            Badge.TextColor3 = Color3.fromRGB(0, 255, 170)
+            Badge.BackgroundColor3 = Color3.fromRGB(15, 45, 35)
+            Stroke.Color = Color3.fromRGB(0, 255, 170)
+        else
+            Badge.Text = "OFF"
+            Badge.TextColor3 = Color3.fromRGB(255, 70, 90)
+            Badge.BackgroundColor3 = Color3.fromRGB(40, 20, 30)
+            Stroke.Color = Color3.fromRGB(40, 45, 70)
+        end
+        callback(active)
+    end)
+end
+
+-- [ 3. DAFTAR MENU FITUR ] --
+addSection("✦ AUTO FARMING & EVENT", 5)
+addToggle("🎃 Auto Collect Pumpkin (Labu)", 30, function(s) isAutoPumpkin = s end)
+addToggle("🥚 Auto Collect Eggs (Telur)", 75, function(s) isAutoEgg = s end)
+addToggle("💰 Auto Collect Coins & Gems", 120, function(s) isAutoCoin = s end)
+
+addSection("✦ PLAYER ENHANCEMENTS", 165)
+addToggle("🛡️ God Mode (Kebal Darah)", 190, function(s) isGodMode = s end)
+addToggle("🚀 Infinite Jump (Terbang)", 235, function(s) isInfJump = s end)
+addToggle("👻 Noclip (Tembus Dinding)", 280, function(s) isNoclip = s end)
+
+-- Speed Box
+local SpeedBox = Instance.new("TextBox")
+SpeedBox.Parent = Container
+SpeedBox.Position = UDim2.new(0, 0, 0, 325)
+SpeedBox.Size = UDim2.new(0.65, -5, 0, 36)
+SpeedBox.BackgroundColor3 = Color3.fromRGB(22, 24, 38)
+SpeedBox.PlaceholderText = "WalkSpeed (Cth: 50)"
+SpeedBox.Text = ""
+SpeedBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedBox.TextSize = 11
+SpeedBox.Font = Enum.Font.Gotham
+Instance.new("UICorner", SpeedBox).CornerRadius = UDim.new(0, 8)
+
+local SetSpeed = Instance.new("TextButton")
+SetSpeed.Parent = Container
+SetSpeed.Position = UDim2.new(0.65, 5, 0, 325)
+SetSpeed.Size = UDim2.new(0.35, -5, 0, 36)
+SetSpeed.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
+SetSpeed.Text = "Set Speed"
+SetSpeed.TextColor3 = Color3.fromRGB(255, 255, 255)
+SetSpeed.TextSize = 11
+SetSpeed.Font = Enum.Font.GothamBold
+Instance.new("UICorner", SetSpeed).CornerRadius = UDim.new(0, 8)
+
+SetSpeed.MouseButton1Click:Connect(function()
+    local val = tonumber(SpeedBox.Text)
+    if val then walkSpeedVal = val end
+end)
+
+-- [ 4. LOGIKA LOOPING FITUR (WORKAROUND AMAN) ] --
+RunService.Heartbeat:Connect(function()
+    local char = Player.Character
+    if char then
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChildOfClass("Humanoid")
+
+        if hum then
+            hum.WalkSpeed = walkSpeedVal
+            if isGodMode then hum.Health = hum.MaxHealth end
+        end
+
+        if isNoclip then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = false end
+            end
+        end
+
+        -- Auto Farming Objects (Pumpkin, Egg, Coins)
+        if hrp and (isAutoPumpkin or isAutoEgg or isAutoCoin) then
+            pcall(function()
+                for _, obj in pairs(Workspace:GetDescendants()) do
+                    if obj:IsA("BasePart") or obj:IsA("Model") then
+                        local name = obj.Name:lower()
+                        local target = obj:IsA("Model") and obj.PrimaryPart or obj
+                        if target then
+                            if isAutoPumpkin and (name:find("pumpkin") or name:find("labu")) then
+                                target.CFrame = hrp.CFrame
+                            elseif isAutoEgg and (name:find("egg") or name:find("telur")) then
+                                target.CFrame = hrp.CFrame
+                            elseif isAutoCoin and (name:find("coin") or name:find("gem") or name:find("cash")) then
+                                target.CFrame = hrp.CFrame
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    if isInfJump and Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
+        pcall(function()
+            Player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+        end)
+    end
+end)
+
+print("Cyber Hub V3 Successfully Loaded!")
