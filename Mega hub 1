@@ -1,46 +1,71 @@
--- [[ CYBER ENGINE V3 - FISH RIDERS FULL FEATURES ]] --
+-- [[ CYBER ENGINE V5.2 - ADVANCED ANTI-KICK & STABLE HUB ]] --
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local Player = Players.LocalPlayer
-local PlayerGui = Player:WaitForChild("PlayerGui")
 
--- [ 1. SAFE ANTI-KICK BYPASS ] --
+-- [ 1. AGGRESSIVE ANTI-KICK & ANTI-BAN BYPASS ] --
 pcall(function()
     local mt = getrawmetatable(game)
     setreadonly(mt, false)
-    local old = mt.__namecall
+    local oldNamecall = mt.__namecall
+    
     mt.__namecall = newcclosure(function(self, ...)
         local method = getnamecallmethod()
-        if tostring(method):lower() == "kick" then
-            return nil
+        local args = {...}
+        
+        -- Blokir semua upaya pemanggilan fungsi kick atau server disconnect
+        if method and (method:lower() == "kick" or method:lower() == "loaddatabase" or method:lower() == "save") then
+            if self == Player then
+                warn("[Cyber Hub] Upaya Kick dari server berhasil diblokir!")
+                return nil
+            end
         end
-        return old(self, ...)
+        
+        return oldNamecall(self, ...)
     end)
     setreadonly(mt, true)
 end)
 
--- Hapus GUI lama agar tidak numpuk
+-- Lindungi fungsi Player:Kick asli
 pcall(function()
-    if PlayerGui:FindFirstChild("CyberHubV3") then
-        PlayerGui.CyberHubV3:Destroy()
+    local OldKick; OldKick = hookmetamethod(Player, "__namecall", function(self, ...)
+        local method = getnamecallmethod()
+        if self == Player and method and method:lower() == "kick" then
+            warn("[Cyber Hub] Player:Kick dicegat dan dinonaktifkan.")
+            return
+        end
+        return OldKick(self, ...)
+    end)
+end)
+
+local PlayerGui = Player:WaitForChild("PlayerGui", 5)
+if not PlayerGui then return end
+
+-- Hapus GUI lama dengan aman
+pcall(function()
+    if PlayerGui:FindFirstChild("CyberHubV5") then
+        PlayerGui.CyberHubV5:Destroy()
     end
 end)
 
--- Status Fitur
+-- Status & Variabel Fitur
 local isAutoPumpkin = false
 local isAutoEgg = false
 local isAutoCoin = false
 local isGodMode = false
 local isInfJump = false
 local isNoclip = false
-local walkSpeedVal = 16
 
--- [ 2. MEMBUAT GUI UTAMA (DIJAMIN MUNCUL) ] --
+local walkSpeedVal = 16
+local swimSpeedVal = 16
+local fishSpeedVal = 50
+
+-- [ 2. GUI UTAMA ] --
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "CyberHubV3"
+ScreenGui.Name = "CyberHubV5"
 ScreenGui.Parent = PlayerGui
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 ScreenGui.ResetOnSpawn = false
@@ -48,15 +73,15 @@ ScreenGui.ResetOnSpawn = false
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(12, 13, 20)
-MainFrame.Position = UDim2.new(0.5, -170, 0.2, 0)
-MainFrame.Size = UDim2.new(0, 340, 0, 420)
+MainFrame.Position = UDim2.new(0.5, -170, 0.15, 0)
+MainFrame.Size = UDim2.new(0, 340, 0, 460)
 MainFrame.Active = true
 MainFrame.Draggable = true
 
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 14)
 local UIStroke = Instance.new("UIStroke")
 UIStroke.Parent = MainFrame
-UIStroke.Color = Color3.fromRGB(255, 140, 0)
+UIStroke.Color = Color3.fromRGB(0, 255, 170)
 UIStroke.Thickness = 1.8
 
 -- Header Top Bar
@@ -71,8 +96,8 @@ HeaderTitle.Parent = Header
 HeaderTitle.Size = UDim2.new(1, -45, 1, 0)
 HeaderTitle.Position = UDim2.new(0, 15, 0, 0)
 HeaderTitle.BackgroundTransparency = 1
-HeaderTitle.Text = "🎃 FISH RIDERS // ULTIMATE HUB"
-HeaderTitle.TextColor3 = Color3.fromRGB(255, 140, 0)
+HeaderTitle.Text = "⚡ FISH RIDERS // V5.2 ANTI-KICK"
+HeaderTitle.TextColor3 = Color3.fromRGB(0, 255, 170)
 HeaderTitle.TextSize = 12
 HeaderTitle.Font = Enum.Font.GothamBold
 HeaderTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -89,7 +114,7 @@ CloseBtn.Font = Enum.Font.GothamBold
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 6)
 
 CloseBtn.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
+    pcall(function() ScreenGui:Destroy() end)
 end)
 
 -- Container Scroll
@@ -98,7 +123,7 @@ Container.Parent = MainFrame
 Container.Position = UDim2.new(0, 10, 0, 55)
 Container.Size = UDim2.new(1, -20, 1, -65)
 Container.BackgroundTransparency = 1
-Container.CanvasSize = UDim2.new(0, 0, 0, 460)
+Container.CanvasSize = UDim2.new(0, 0, 0, 560)
 Container.ScrollBarThickness = 3
 
 local function addSection(titleText, yPos)
@@ -108,7 +133,7 @@ local function addSection(titleText, yPos)
     lbl.Size = UDim2.new(1, -10, 0, 20)
     lbl.BackgroundTransparency = 1
     lbl.Text = titleText
-    lbl.TextColor3 = Color3.fromRGB(0, 200, 255)
+    lbl.TextColor3 = Color3.fromRGB(255, 140, 0)
     lbl.TextSize = 11
     lbl.Font = Enum.Font.GothamBold
     lbl.TextXAlignment = Enum.TextXAlignment.Left
@@ -160,93 +185,11 @@ local function addToggle(text, yPos, callback)
     end)
 end
 
--- [ 3. DAFTAR MENU FITUR ] --
+-- [ 3. MENU ITEMS ] --
 addSection("✦ AUTO FARMING & EVENT", 5)
 addToggle("🎃 Auto Collect Pumpkin (Labu)", 30, function(s) isAutoPumpkin = s end)
 addToggle("🥚 Auto Collect Eggs (Telur)", 75, function(s) isAutoEgg = s end)
 addToggle("💰 Auto Collect Coins & Gems", 120, function(s) isAutoCoin = s end)
 
-addSection("✦ PLAYER ENHANCEMENTS", 165)
-addToggle("🛡️ God Mode (Kebal Darah)", 190, function(s) isGodMode = s end)
-addToggle("🚀 Infinite Jump (Terbang)", 235, function(s) isInfJump = s end)
-addToggle("👻 Noclip (Tembus Dinding)", 280, function(s) isNoclip = s end)
-
--- Speed Box
-local SpeedBox = Instance.new("TextBox")
-SpeedBox.Parent = Container
-SpeedBox.Position = UDim2.new(0, 0, 0, 325)
-SpeedBox.Size = UDim2.new(0.65, -5, 0, 36)
-SpeedBox.BackgroundColor3 = Color3.fromRGB(22, 24, 38)
-SpeedBox.PlaceholderText = "WalkSpeed (Cth: 50)"
-SpeedBox.Text = ""
-SpeedBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-SpeedBox.TextSize = 11
-SpeedBox.Font = Enum.Font.Gotham
-Instance.new("UICorner", SpeedBox).CornerRadius = UDim.new(0, 8)
-
-local SetSpeed = Instance.new("TextButton")
-SetSpeed.Parent = Container
-SetSpeed.Position = UDim2.new(0.65, 5, 0, 325)
-SetSpeed.Size = UDim2.new(0.35, -5, 0, 36)
-SetSpeed.BackgroundColor3 = Color3.fromRGB(255, 140, 0)
-SetSpeed.Text = "Set Speed"
-SetSpeed.TextColor3 = Color3.fromRGB(255, 255, 255)
-SetSpeed.TextSize = 11
-SetSpeed.Font = Enum.Font.GothamBold
-Instance.new("UICorner", SetSpeed).CornerRadius = UDim.new(0, 8)
-
-SetSpeed.MouseButton1Click:Connect(function()
-    local val = tonumber(SpeedBox.Text)
-    if val then walkSpeedVal = val end
-end)
-
--- [ 4. LOGIKA LOOPING FITUR (WORKAROUND AMAN) ] --
-RunService.Heartbeat:Connect(function()
-    local char = Player.Character
-    if char then
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        local hum = char:FindFirstChildOfClass("Humanoid")
-
-        if hum then
-            hum.WalkSpeed = walkSpeedVal
-            if isGodMode then hum.Health = hum.MaxHealth end
-        end
-
-        if isNoclip then
-            for _, part in pairs(char:GetDescendants()) do
-                if part:IsA("BasePart") then part.CanCollide = false end
-            end
-        end
-
-        -- Auto Farming Objects (Pumpkin, Egg, Coins)
-        if hrp and (isAutoPumpkin or isAutoEgg or isAutoCoin) then
-            pcall(function()
-                for _, obj in pairs(Workspace:GetDescendants()) do
-                    if obj:IsA("BasePart") or obj:IsA("Model") then
-                        local name = obj.Name:lower()
-                        local target = obj:IsA("Model") and obj.PrimaryPart or obj
-                        if target then
-                            if isAutoPumpkin and (name:find("pumpkin") or name:find("labu")) then
-                                target.CFrame = hrp.CFrame
-                            elseif isAutoEgg and (name:find("egg") or name:find("telur")) then
-                                target.CFrame = hrp.CFrame
-                            elseif isAutoCoin and (name:find("coin") or name:find("gem") or name:find("cash")) then
-                                target.CFrame = hrp.CFrame
-                            end
-                        end
-                    end
-                end
-            end)
-        end
-    end
-end)
-
-UserInputService.JumpRequest:Connect(function()
-    if isInfJump and Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
-        pcall(function()
-            Player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
-        end)
-    end
-end)
-
-print("Cyber Hub V3 Successfully Loaded!")
+addSection("✦ PLAYER & SPEED ENHANCEMENTS", 165)
+addToggle("🛡️ God Mode (Kebal Darah)", 190, function(s) isGodMode
